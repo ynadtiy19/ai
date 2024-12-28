@@ -1,0 +1,93 @@
+We are developing a unique AI assistant chatbot using Google's Gemini 2.0 Multimodal Live API, focusing on advanced features like real-time multimodal interactions (vision, speech, and audio). Unlike traditional conversational chatbots, this AI assistant will allow users to engage in human-like conversations by utilizing a camera button, enabling face-to-face interactions with the AI.
+
+The project will be divided into two main components:
+
+Frontend (Flutter UI): This will be the user interface that allows interaction with the AI, focusing on visual and auditory communication features.
+
+Backend (WebSocket Server): This will be handled separately, where we’ll eventually set up a WebSocket server for real-time communication between the AI model and the app. we’ll work on this part later after completing the frontend.
+
+For now, we'll focus on the frontend UI, while keeping the backend preparation in mind.
+
+Key Features of the Gemini 2.0 Multimodal Live API
+
+The Gemini API provides powerful capabilities, including:
+
+Multimodality: The AI can see, hear, and speak. This allows it to process visual, audio, and textual data for richer interaction.
+
+Low-latency real-time interaction: The model offers fast, responsive interactions, crucial for maintaining a fluid conversation.
+
+Session Memory: The AI remembers information from the ongoing session. This enables the assistant to recall past interactions, making conversations feel more natural.
+
+Support for Function Calling, Code Execution, and Search: These features allow the AI to access external services or data sources, further enhancing its capabilities.
+
+Automated Voice Activity Detection (VAD): The AI can detect when a user starts or stops speaking, enabling a more natural back-and-forth interaction without the need for manual input.
+
+I already have access to the Gemini API and are ready to integrate it into the app.
+
+Frontend Development Using Flutter
+
+The frontend will be developed using Flutter, a cross-platform UI toolkit that will handle the user interface of the AI assistant. Here’s a step-by-step breakdown of what you need to do for the frontend:
+
+Set up the Flutter Project:
+
+I already created a new Flutter project named (ai) to serve as the base of the app.
+
+Organize the project into clearly defined folders for better maintainability (e.g., /widgets, /features, /services, etc.).
+
+User Interface:
+
+Main Chat Screen: Design a screen that includes the chat interface, where users can type messages, see responses, and interact with the assistant.
+
+Camera Button: Add a button that allows users to activate the camera for face-to-face interaction with the AI. This feature will use the multimodal capabilities of the Gemini API to capture visual input.
+
+Audio/Voice Input: Implement an audio input feature that integrates with the VAD capability of the API. This allows the AI to detect voice activity and start/stop listening based on the user's speech.
+
+Response Display: Display the AI’s responses, including text, audio, and visual elements (e.g., images, facial recognition, or video feed), depending on the multimodal input.
+
+User Experience Considerations:
+
+Ensure the design is simple, intuitive, and responsive, allowing for seamless interactions, especially since users will engage with the AI in a conversational manner.
+
+Implement real-time feedback during the interactions, with low-latency responses provided by the Gemini API.
+
+State Management:
+
+Use an appropriate state management solution (e.g., Riverpod, Provider, or Bloc) to handle the flow of data within the app, especially for managing session memory and interactions with the AI.
+
+Error Handling:
+
+Implement error handling for API calls, camera access, and voice detection to ensure smooth operation.
+
+Backend (WebSocket Server) - Future Work
+
+Although not included in the initial scope, we’ll need a WebSocket server to facilitate real-time communication between the app and the AI model.
+
+Remote Server Setup: I already have a remote server. When we are ready, I will SSH into the server and use a Dart server template to set up the WebSocket server.
+
+WebSocket Integration: The server will handle sending and receiving data from the Gemini API, ensuring seamless real-time communication.
+
+API Communication: The WebSocket server will interact with the Gemini API to handle the multimodal inputs and outputs, sending and receiving data from the frontend in real-time.
+
+Technologies and Tools
+
+Flutter for frontend development.
+
+Dart WebSocket Server template for backend (to be set up later).
+
+Google Gemini 2.0 Multimodal Live API for the core AI functionality.
+
+VS Code Insiders as your development environment, with the Flutter extension for smooth development.
+
+Next Steps
+
+Frontend Development:Focus on building the user interface in Flutter with the above-mentioned features (camera, voice, chat UI).
+
+Integrate the Gemini API for multimodal interactions (text, speech, vision).
+
+Backend: Work on the WebSocket server setup later to handle real-time AI communication.
+
+Final Thoughts
+
+The goal is to create an AI assistant that feels like a human interaction, offering not only text-based Q&A but also voice and video interactions. By focusing on the frontend first, you will create a seamless and interactive UI that prepares you for integrating the backend features when you’re ready.
+
+Remember, while building the frontend, focus on clear, organized project structure, smooth user interactions, and preparing for future backend integration with the WebSocket server. Be as detailed as possible, letting me know file names, locations etc.

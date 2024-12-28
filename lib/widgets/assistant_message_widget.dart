@@ -1,6 +1,10 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:ai/models/message.dart';
+import 'package:ai/widgets/preview_images_widget.dart';
+import 'package:ai/widgets/chat_video_player.dart';
 
 class AssistantMessageWidget extends StatelessWidget {
   const AssistantMessageWidget({
@@ -8,7 +12,7 @@ class AssistantMessageWidget extends StatelessWidget {
     required this.message,
   });
 
-  final String message;
+  final Message message;
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +28,7 @@ class AssistantMessageWidget extends StatelessWidget {
         ),
         padding: const EdgeInsets.all(15),
         margin: const EdgeInsets.only(bottom: 8),
-        child: message.isEmpty
+        child: message.message.toString().isEmpty
             ? const SizedBox(
                 width: 50,
                 child: SpinKitThreeBounce(
@@ -32,9 +36,25 @@ class AssistantMessageWidget extends StatelessWidget {
                   size: 20.0,
                 ),
               )
-            : MarkdownBody(
-                selectable: true,
-                data: message,
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (message.imagesUrls.isNotEmpty)
+                    PreviewImagesWidget(
+                      message: message,
+                    ),
+                  if (message.videoPath != null)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8.0),
+                      child: ChatVideoPlayer(
+                        videoPath: message.videoPath!,
+                      ),
+                    ),
+                  MarkdownBody(
+                    selectable: true,
+                    data: message.message.toString(),
+                  ),
+                ],
               ),
       ),
     );

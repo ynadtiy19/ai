@@ -1,6 +1,8 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:ai/models/message.dart';
 import 'package:ai/widgets/preview_images_widget.dart';
+import 'package:ai/widgets/chat_video_player.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 
 class MyMessageWidget extends StatelessWidget {
@@ -26,10 +28,18 @@ class MyMessageWidget extends StatelessWidget {
         padding: const EdgeInsets.all(15),
         margin: const EdgeInsets.only(bottom: 8),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             if (message.imagesUrls.isNotEmpty)
               PreviewImagesWidget(
                 message: message,
+              ),
+            if (message.videoPath != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8.0),
+                child: ChatVideoPlayer(
+                  videoPath: message.videoPath!,
+                ),
               ),
             MarkdownBody(
               selectable: true,

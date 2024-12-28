@@ -4,6 +4,7 @@ class Message {
   Role role;
   StringBuffer message;
   List<String> imagesUrls;
+  String? videoPath;  
   DateTime timeSent;
 
   // constructor
@@ -13,6 +14,7 @@ class Message {
     required this.role,
     required this.message,
     required this.imagesUrls,
+    this.videoPath,  
     required this.timeSent,
   });
 
@@ -24,6 +26,7 @@ class Message {
       'role': role.index,
       'message': message.toString(),
       'imagesUrls': imagesUrls,
+      'videoPath': videoPath,  
       'timeSent': timeSent.toIso8601String(),
     };
   }
@@ -36,6 +39,7 @@ class Message {
       role: Role.values[map['role']],
       message: StringBuffer(map['message']),
       imagesUrls: List<String>.from(map['imagesUrls']),
+      videoPath: map['videoPath'],  
       timeSent: DateTime.parse(map['timeSent']),
     );
   }
@@ -47,6 +51,7 @@ class Message {
     Role? role,
     StringBuffer? message,
     List<String>? imagesUrls,
+    String? videoPath,  
     DateTime? timeSent,
   }) {
     return Message(
@@ -55,6 +60,7 @@ class Message {
       role: role ?? this.role,
       message: message ?? this.message,
       imagesUrls: imagesUrls ?? this.imagesUrls,
+      videoPath: videoPath ?? this.videoPath,  
       timeSent: timeSent ?? this.timeSent,
     );
   }

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:developer';
+import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
@@ -26,16 +27,19 @@ class ChatProvider extends ChangeNotifier {
   // images file list
   List<XFile>? _imagesFileList = [];
 
+  // video file
+  XFile? _videoFile;
+
   // index of the current screen
   int _currentIndex = 0;
 
-  // cuttent chatId
+  // current chatId
   String _currentChatId = '';
 
   // initialize generative model
   GenerativeModel? _model;
 
-  // itialize text model
+  // initialize text model
   GenerativeModel? _textModel;
 
   // initialize vision model
@@ -53,6 +57,8 @@ class ChatProvider extends ChangeNotifier {
   PageController get pageController => _pageController;
 
   List<XFile>? get imagesFileList => _imagesFileList;
+
+  XFile? get videoFile => _videoFile;
 
   int get currentIndex => _currentIndex;
 
@@ -109,6 +115,12 @@ class ChatProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  // set video file
+  void setVideoFile({XFile? video}) {
+    _videoFile = video;
+    notifyListeners();
+  }
+
   // set the current model
   String setCurrentModel({required String newModel}) {
     _modelType = newModel;
@@ -152,9 +164,7 @@ class ChatProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-//?Yeha bata copy
-
-  // delete caht
+  // delete chat
   Future<void> deleteChatMessages({required String chatId}) async {
     // 1. check if the box is open
     if (!Hive.isBoxOpen('${Constants.chatMessagesBox}$chatId')) {
@@ -213,9 +223,7 @@ class ChatProvider extends ChangeNotifier {
     }
   }
 
-//?yeha samma
-
-  // send message to gemini and get the streamed reposnse
+  // send message to gemini and get the streamed response
   Future<void> sentMessage({
     required String message,
     required bool isTextOnly,
@@ -229,7 +237,7 @@ class ChatProvider extends ChangeNotifier {
     // get the chatId
     String chatId = getChatId();
 
-    // list of history messahes
+    // list of history messages
     List<Content> history = [];
 
     // get the chat history
@@ -238,7 +246,6 @@ class ChatProvider extends ChangeNotifier {
     // get the imagesUrls
     List<String> imagesUrls = getImagesUrls(isTextOnly: isTextOnly);
 
-//??Copy
     // open the messages box
     final messagesBox =
         await Hive.openBox('${Constants.chatMessagesBox}$chatId');
@@ -248,8 +255,6 @@ class ChatProvider extends ChangeNotifier {
 
     // assistant messageId
     final assistantMessageId = messagesBox.keys.length + 1;
-
-// ?yeha samma
 
     // user message
     final userMessage = Message(
@@ -269,7 +274,6 @@ class ChatProvider extends ChangeNotifier {
       setCurrentChatId(newChatId: chatId);
     }
 
-// ? change is here
     // send the message to the model and wait for the response
     await sendMessageAndWaitForResponse(
       message: message,
@@ -289,7 +293,7 @@ class ChatProvider extends ChangeNotifier {
     required bool isTextOnly,
     required List<Content> history,
     required Message userMessage,
-    required String modelMessageId, // ? Add this line
+    required String modelMessageId,
     required Box messagesBox,
   }) async {
     // start the chat session - only send history is its text-only
@@ -358,7 +362,7 @@ class ChatProvider extends ChangeNotifier {
     // save the assistant messages
     await messagesBox.add(assistantMessage.toMap());
 
-    // save chat history with thae same chatId
+    // save chat history with the same chatId
     // if its already there update it
     // if not create a new one
     final chatHistoryBox = Boxes.getChatHistory();
@@ -399,7 +403,7 @@ class ChatProvider extends ChangeNotifier {
     }
   }
 
-  // get y=the imagesUrls
+  // get the imagesUrls
   List<String> getImagesUrls({
     required bool isTextOnly,
   }) {
@@ -434,6 +438,189 @@ class ChatProvider extends ChangeNotifier {
       return const Uuid().v4();
     } else {
       return currentChatId;
+    }
+  }
+
+  // send message with image
+  Future<void> sendMessageWithImage(File imageFile) async {
+    try {
+      setLoading(value: true);
+
+      // Set the image file
+      setImagesFileList(listValue: [XFile(imageFile.path)]);
+
+      // Use vision model for image
+      await setModel(isTextOnly: false);
+
+      String chatId = getChatId();
+      List<Content> history = await getHistory(chatId: chatId);
+
+      final messagesBox =
+          await Hive.openBox('${Constants.chatMessagesBox}$chatId');
+      final userMessageId = const Uuid().v4();
+      final modelMessageId = const Uuid().v4();
+
+      // Create user message
+      final userMessage = Message(
+        messageId: userMessageId,
+        chatId: chatId,
+        role: Role.user,
+        message: StringBuffer("Image message"),
+        imagesUrls: [imageFile.path],
+        timeSent: DateTime.now(),
+      );
+
+      await sendMessageAndWaitForResponse(
+        message: "Analyze this image",
+        chatId: chatId,
+        isTextOnly: false,
+        history: history,
+        userMessage: userMessage,
+        modelMessageId: modelMessageId,
+        messagesBox: messagesBox,
+      );
+    } catch (e) {
+      log('Error sending image message: $e');
+    } finally {
+      setImagesFileList(listValue: []);
+      setLoading(value: false);
+    }
+  }
+
+  // send message with video
+  Future<void> sendMessageWithVideo(File videoFile) async {
+    try {
+      setLoading(value: true);
+
+      _addMessage("Video sent", true, videoPath: videoFile.path);
+
+      // Set up for video processing
+      setVideoFile(video: XFile(videoFile.path));
+      await setModel(isTextOnly: false);
+
+      String chatId = getChatId();
+      List<Content> history = await getHistory(chatId: chatId);
+
+      final messagesBox =
+          await Hive.openBox('${Constants.chatMessagesBox}$chatId');
+      final modelMessageId = const Uuid().v4();
+
+      // Create content with video
+      final content = await getContent(
+        message: "Analyze this video",
+        isTextOnly: false,
+      );
+
+      final chatSession = _model!.startChat();
+
+      // Create assistant message placeholder
+      _addMessage("", false);
+
+      // Stream the response
+      chatSession.sendMessageStream(content).listen(
+        (event) {
+          final lastMessage = _inChatMessages.last;
+          lastMessage.message.write(event.text);
+          notifyListeners();
+        },
+        onDone: () async {
+          final userMessage = _inChatMessages[_inChatMessages.length - 2];
+          final assistantMessage = _inChatMessages.last;
+
+          await saveMessagesToDB(
+            chatID: chatId,
+            userMessage: userMessage,
+            assistantMessage: assistantMessage,
+            messagesBox: messagesBox,
+          );
+          setLoading(value: false);
+        },
+        onError: (error) {
+          log('Error in sendMessageWithVideo: $error');
+          _addMessage("Sorry, I couldn't process the video.", false);
+          setLoading(value: false);
+        },
+      );
+    } catch (e) {
+      log('Error in sendMessageWithVideo: $e');
+      _addMessage("Sorry, I couldn't process the video.", false);
+      setLoading(value: false);
+    } finally {
+      setVideoFile(video: null);
+    }
+  }
+
+  // Helper method to add message to chat
+  void _addMessage(String text, bool isUser,
+      {String? imagePath, String? videoPath}) {
+    final message = Message(
+      messageId: const Uuid().v4(),
+      chatId: currentChatId.isEmpty ? getChatId() : currentChatId,
+      role: isUser ? Role.user : Role.assistant,
+      message: StringBuffer(text),
+      imagesUrls: imagePath != null
+          ? [imagePath]
+          : videoPath != null
+              ? [videoPath]
+              : [],
+      timeSent: DateTime.now(),
+    );
+
+    _inChatMessages.add(message);
+    notifyListeners();
+  }
+
+  // Simple message sending for text-only messages
+  Future<void> sendMessage(String text) async {
+    try {
+      setLoading(value: true);
+
+      _addMessage(text, true); // Add user message
+
+      await setModel(isTextOnly: true);
+      String chatId = getChatId();
+      List<Content> history = await getHistory(chatId: chatId);
+
+      final messagesBox =
+          await Hive.openBox('${Constants.chatMessagesBox}$chatId');
+      final modelMessageId = const Uuid().v4();
+
+      // Get response from model
+      final content = Content.text(text);
+      final chatSession = _model!.startChat(history: history);
+
+      // Create assistant message placeholder
+      _addMessage("", false); // Will be updated with streamed response
+
+      // Stream the response
+      chatSession.sendMessageStream(content).listen(
+        (event) {
+          final lastMessage = _inChatMessages.last;
+          lastMessage.message.write(event.text);
+          notifyListeners();
+        },
+        onDone: () async {
+          final userMessage = _inChatMessages[_inChatMessages.length - 2];
+          final assistantMessage = _inChatMessages.last;
+
+          await saveMessagesToDB(
+            chatID: chatId,
+            userMessage: userMessage,
+            assistantMessage: assistantMessage,
+            messagesBox: messagesBox,
+          );
+          setLoading(value: false);
+        },
+        onError: (error) {
+          log('Error in sendMessage: $error');
+          _addMessage("Sorry, I couldn't generate a response.", false);
+          setLoading(value: false);
+        },
+      );
+    } catch (e) {
+      log('Error in sendMessage: $e');
+      _addMessage("Sorry, I couldn't generate a response.", false);
+      setLoading(value: false);
     }
   }
 
